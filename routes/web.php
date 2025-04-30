@@ -8,5 +8,5 @@ Route::get('/', function () {
 });
 
 
-Route::get('/subscribe', [SubscriptionController::class, 'showForm'])->name('subscribe.form');
-Route::post('/subscribe', [SubscriptionController::class, 'processForm'])->name('subscribe.process');
+Route::get('/subscribe', [SubscriptionController::class, 'showForm']);
+Route::post('/subscribe', [SubscriptionController::class, 'processSubscription']);
