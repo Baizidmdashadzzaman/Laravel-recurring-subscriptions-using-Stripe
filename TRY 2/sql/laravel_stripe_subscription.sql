@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 01, 2025 at 06:32 AM
+-- Generation Time: May 01, 2025 at 06:58 AM
 -- Server version: 10.4.27-MariaDB
 -- PHP Version: 8.2.0
 
@@ -123,6 +123,14 @@ CREATE TABLE `plans` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `plans`
+--
+
+INSERT INTO `plans` (`id`, `uuid`, `stripe_plan_id`, `plan_name`, `plan_price`, `plan_type`, `status`, `created_at`, `updated_at`) VALUES
+(1, '605d163b-5b4d-4942-997a-ca87bd1f3b6c', 'price_1RJpsqP2kqOTkjJTJpHKgaiM', 'Siler Monthly', 99.99, 1, 1, '2025-04-30 22:54:04', '2025-04-30 22:54:04'),
+(2, '3f601b8c-ef5d-4257-9f1c-a1948ad566dc', 'price_1RJpw4P2kqOTkjJTGMQ5iPFZ', 'Gold Yearly', 399.99, 2, 1, '2025-04-30 22:54:04', '2025-04-30 22:54:04');
 
 -- --------------------------------------------------------
 
@@ -286,7 +294,7 @@ ALTER TABLE `personal_access_tokens`
 -- AUTO_INCREMENT for table `plans`
 --
 ALTER TABLE `plans`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `stripe_users`
