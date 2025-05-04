@@ -1,5 +1,3 @@
-{{-- resources/views/subscribe.blade.php --}}
-
 <!DOCTYPE html>
 <html>
 <head>
