@@ -4,63 +4,81 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Stripe\Stripe;
-use Stripe\Customer;
-use Stripe\SetupIntent;
-use Stripe\Subscription;
+use Stripe\Checkout\Session;
+use Stripe\Webhook;
+use Stripe\Exception\SignatureVerificationException;
 
 class SubscriptionController extends Controller
 {
-    public function showForm()
+    public function show()
     {
-        // Pull your secret key from config/services.php → .env
-        Stripe::setApiKey(config('services.stripe.secret'));
-
-        // Create a SetupIntent so we can do 3DS right away
-        $intent = SetupIntent::create();
-
-        return view('subscribe', [
-            'stripeKey'    => config('services.stripe.key'),
-            'clientSecret' => $intent->client_secret,
-        ]);
+        $priceId = config('services.stripe.price_monthly');
+        $publishable = config('services.stripe.key');
+        return view('subscribe', compact('priceId', 'publishable'));
     }
 
-    public function processSubscription(Request $request)
+    public function create(Request $request)
     {
+        $request->validate([
+            'email'    => 'required|email',
+            'price_id' => 'required'
+        ]);
+
         Stripe::setApiKey(config('services.stripe.secret'));
 
-        // 1️⃣ Create the customer and attach the payment method
-        $customer = Customer::create([
-            'email'           => $request->email,
-            'payment_method'  => $request->payment_method,
-            'invoice_settings'=> [
-                'default_payment_method' => $request->payment_method,
-            ],
+        // Create Checkout Session
+        $session = Session::create([
+            'payment_method_types' => ['card'],
+            'mode'                 => 'subscription',
+            'customer_email'       => $request->email,
+            'line_items'           => [[
+                'price'    => $request->price_id,
+                'quantity' => 1,
+            ]],
+            'success_url'          => route('subscribe.success') . '?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url'           => route('subscribe.cancel'),
         ]);
 
-        // 2️⃣ Create the subscription (uses your price ID)
-        $subscription = Subscription::create([
-            'customer' => $customer->id,
-            'items'    => [
-                ['price' => 'price_1RJScrP2kqOTkjJTBj6UAtic'],  // ← replace with your actual Price ID
-            ],
-            // expand the first invoice’s PI so we can handle any on-first-payment 3DS
-            'expand'   => ['latest_invoice.payment_intent'],
-        ]);
+        return redirect($session->url);
+    }
 
-        $pi = $subscription->latest_invoice->payment_intent;
+    public function success(Request $request)
+    {
+        $sessionId = $request->query('session_id');
+        return view('subscribe-success', compact('sessionId'));
+    }
 
-        // 3️⃣ If the first invoice needs an extra 3DS step, tell the frontend
-        if ($pi && $pi->status === 'requires_action') {
-            return response()->json([
-                'requiresAction'       => true,
-                'paymentIntentSecret'  => $pi->client_secret,
-            ]);
+    public function cancel()
+    {
+        return view('subscribe-cancel');
+    }
+
+    public function webhook(Request $request)
+    {
+        Stripe::setApiKey(config('services.stripe.secret'));
+        $payload = $request->getContent();
+        $sigHeader = $request->header('Stripe-Signature');
+        $endpointSecret = config('services.stripe.webhook_secret');
+
+        try {
+            $event = Webhook::constructEvent($payload, $sigHeader, $endpointSecret);
+        } catch (SignatureVerificationException $e) {
+            return response('Invalid signature', 400);
         }
 
-        // 4️⃣ Otherwise, we’re all set!
-        return response()->json([
-            'requiresAction' => false,
-            'message'        => 'Subscription is active!',
-        ]);
+        // Handle relevant event types
+        switch ($event->type) {
+            case 'checkout.session.completed':
+                // Retrieve session: $session = $event->data->object;
+                break;
+            case 'invoice.paid':
+                // Handle recurring payment
+                break;
+            case 'invoice.payment_failed':
+                // Notify customer
+                break;
+        }
+
+        return response('Webhook handled', 200);
     }
 }

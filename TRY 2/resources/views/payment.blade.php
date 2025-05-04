@@ -42,7 +42,7 @@
             <input class="form-control number_only" type="tel" placeholder="123" name="cvv_number" id="cvv_number" maxlength="3"  autocomplete="off"/>
           </div>
       </div>
-      
+
       <div class="col-md-12">
         <div class="col-md-4 ">
             <div class="form-group">
@@ -87,7 +87,7 @@
 <script src="https://js.stripe.com/v2/"></script>
 <script src="https://www.mdnect.com/stylesheet/assets/js/jquery.payment.js"></script>
 <script type="text/javascript">
-  
+
 $(document).ready(function(){
     $("#pay_button").click(function(e){
         e.preventDefault();
@@ -160,7 +160,7 @@ $(document).ready(function(){
         $("#stripe_year").val(date[1]);
         GenerateStripeToken();
     })
-       
+
     /**
      * Generate stripe toke for payment
      *
@@ -178,14 +178,14 @@ $(document).ready(function(){
     //         exp_year: exp_year?exp_year:11
     //     }, stripeHandleResponse);
     // }
-    
+
     function GenerateStripeToken(){
         Stripe.setPublishableKey('{{ENV("STRIPE_PK")}}');
         var card_number = $("#cart_number").val();
         var exp_month   = parseInt($("#stripe_month").val());
         var exp_year    = parseInt($("#stripe_year").val());
         var cvv_number  = $("#cvv_number").val();
-        
+
         Stripe.createToken({
             number: card_number?card_number:1111,
             cvc: cvv_number?cvv_number:22,
@@ -224,7 +224,7 @@ $(document).ready(function(){
                         $(span_error_id).text('');
                     }
                 }
-            } 
+            }
         })
     }
     //stripe token generate
